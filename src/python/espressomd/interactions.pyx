@@ -17,7 +17,220 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>. 
 #  
 include "myconfig.pxi"
+from highlander import *
 # Non-bonded interactions
+
+
+
+@highlander
+class ElectrostaticInteraction(object):
+  _bjerrum_length=0
+  _params={}
+
+  def __init__(self, *args, **kwargs):
+    """
+    Represents an instance of a Electrostatic interaction, such as P3M.
+    Required aguments: lb
+    """
+    
+    # Interaction id as argument
+    if len(args)<=2:
+      if len(args)==1:
+        self._bejrrum_length=args[0]
+      elif len(args)==2:
+        if args[0]>0:
+          self._bjerrum_length=args[0]
+          second_arg=args[1]
+        elif args[1]>0:
+          self._bjerrum_length=args[1]
+          second_arg=args[0]
+        else:
+          raise ValueError("Invalid value for Bjerrum length.")
+          
+      self._params=self.defaultParams()
+      self._partTypes=[-1,-1]
+      
+      # Check if all required keys are given
+      for k in self.requiredKeys():
+        if k not in kwargs:
+          raise ValueError("At least the following keys have to be given as keyword arguments: "+self.requiredKeys().__str__())
+      
+      self._params = kwargs
+      
+      # Validation of parameters
+      self.validateParams()
+      
+      if second_arg == "tune" or second_arg == "tune_alpha":
+        self._tune()
+      else:
+        raise ValueError("Invalid argument %s" %second_arg)
+
+    else:
+      raise Exception("At least the Bjerrum length has to be given as argument.")
+
+   
+  def isValid(self):
+    """Check, if the data stored in the instance still matches what is in Espresso"""
+
+    # check, if the bond parameters saved in the class still match those saved in Espresso
+    tempParams =self._getParamsFromEsCore()
+    if self._params != tempParams:
+      return False
+    
+    # If we're still here, the instance is valid
+    return True
+ 
+ 
+  def getParams(self):
+    """Get interaction parameters"""
+    # If this instance refers to an actual interaction defined in the es core, load
+    # current parameters from there
+    self._params=self._getParamsFromEsCore()
+    
+    return self._params
+
+  def setParams(self,**p):
+    """Update parameters. Only given """
+    # Check, if any key was passed, which is not known
+    for k in p.keys():
+      if k not in self.validKeys():
+        raise ValueError("Only the following keys are supported: "+self.validKeys().__str__())
+
+    # When an interaction is newly activated, all required keys must be given
+    if not self.isActive():
+      for k in self.requiredKeys():
+        if k not in p:
+          raise ValueError("At least the following keys have to be given as keyword arguments: "+self.requiredKeys().__str__())
+    
+    # Put in values given by the user
+    self._params.update(p)
+    self._setParamsInEsCore()
+
+  def validateParams(self):
+    return True
+
+  def _getParamsFromEsCore(self):
+    raise Exception("Subclasses of ElectrostaticInteraction must define the _getParamsFromEsCore() method.")
+  
+  def _setParamsInEsCore(self):
+    raise Exception("Subclasses of ElectrostaticInteraction must define the setParamsFromEsCore() method.")
+
+  def _tune(self):
+    raise Exception("Subclasses of ElectrostaticInteraction must define the tune() method or chosen method does not support tuning.")
+
+  def defaultParams(self):
+    raise Exception("Subclasses of ElectrostaticInteraction must define the defaultParams() method.")
+  
+  def isActive(self):
+    # If this instance refers to an actual interaction defined in the es core, load
+    raise Exception("Subclasses of ElectrostaticInteraction must define the isActive() method.")
+
+  
+  def typeName(self): 
+    raise Exception("Subclasses of ElectrostaticInteraction must define the typeName() method.")
+  
+  def validKeys(self): 
+    raise Exception("Subclasses of ElectrostaticInteraction must define the validKeys() method.")
+  
+  def requiredKeys(self): 
+    raise Exception("Subclasses of ElectrostaticInteraction must define the requiredKeys() method.")
+
+
+@highlander_inherit
+class P3M(ElectrostaticInteraction):
+  def typeNumber(self):
+    return 0
+
+  def typeName(self): 
+    return "P3M"
+
+  def validateParams(self):
+    if self._params["r_cut"]<=0:
+      raise ValueError("P3M r_cut has to be >=0")
+    if not (isinstance(self._params["mesh"],int) or len(self._params["mesh"]) == 3):
+      raise ValueError("P3M mesh has to be an integer or integer list of length 3")
+    if not (isinstance(self._params["cao"],int) and self._params["cao"] >= -1 and self._params["cao"] <= 7):
+      raise ValueError("P3M cao has to be an integer between -1 and 7")
+
+    if not (self._params["accuracy"] > 0):
+      raise ValueError("P3M accuracy has to be positive")
+      
+    if not (isinstance(self._params["n_interpol"],int_) and self._params["n_interpol"] >= 0):
+      raise ValueError("P3M n_interpol has to be a positive integer")
+
+    if (mesh[0]%2 != 0 and mesh[0] != -1) or (mesh[1]%2 != 0 and mesh[1] != -1) or (mesh[2]%2 != 0 and mesh[2] != -1):
+      raise ValueError("P3M requires an even number of mesh points in all directions")
+
+    return True
+
+  def validKeys(self):
+    return "alpha_L","r_cut_iL","mesh","mesh_off","cao","inter","accuracy","epsilon","cao_cut","a","ai","alpha","r_cut","inter2","cao3","additional_mesh"
+
+  def requiredKeys(self): 
+    return "accuracy"
+
+  def setDefaultParams(self):
+    self._params = {"cao":-1,\
+                    "n_interpol":-1,\
+                    "r_cut":-1,\
+                    "accuracy":-1,\
+                    "mesh":[-1,-1,-1]}
+
+  def _getParamsFromEsCore(self):
+    cdef p3m_parameter_struct* p3m_parameter
+    p3m_parameter = 
+    return \
+      {"alpha_L":p3m_parameter.alpha_L,\
+       "r_cut_iL":p3m_parameter.r_cut_iL,\
+       "mesh":p3m_parameter.mesh,\
+       "mesh_off":p3m_parameter.mesh_off,\
+       "cao":p3m_parameter.cao,\
+       "inter":p3m_parameter.inter,\
+       "accuracy":p3m_parameter.accuracy,\
+       "epsilon":p3m_parameter.epsilon,\
+       "cao_cut":p3m_parameter.cao_cut,\
+       "a":p3m_parameter.a,\
+       "ai":p3m_parameter.ai,\
+       "alpha":p3m_parameter.alpha,\
+       "r_cut":p3m_parameter.r_cut,\
+       "inter2":p3m_parameter.inter2,\
+       "cao3":p3m_parameter.cao3,\
+       "additional_mesh":p3m_parameter.additional_mesh}
+
+  def _setParamsInEsCore(self):
+    python_p3m_set_params(self._params["r_cut"],np.array(self._params["mesh"]),self._params["cao"],self._params["alpha"],self,_params["accuracy"])
+
+  def _tune(self):
+    cdef char** log
+    python_p3m_set_tune_params(self._params["r_cut"], np.array(self._params["mesh"]), self._params["cao"], -1.0, self._params["accuracy"], self.params["n_interpol"])
+    if not p3m_adaptive_tune(log):
+      raise Exception("\nfailed to tune P3M parameters to required accuracy")
+    # print log
+
+@higlander_inherit
+class P3M_GPU(ElectrostaticInteraction):
+  def __init__(self):
+    print "P3M_GPU"
+
+
+@highlander
+class HydrodynamicInteraction(object):
+  def __init__(self):
+    print "Hydrodynamic"
+
+
+@highlander_inherit
+class LB(HydrodynamicInteraction):
+  def __init__(self):
+    print "LB"
+
+
+@highlander_inherit
+class LB_GPU(HydrodynamicInteraction):
+  def __init__(self):
+    print "LB_GPU"
+
+
 
 cdef class NonBondedInteraction(object):
   

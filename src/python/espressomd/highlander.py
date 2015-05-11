@@ -29,13 +29,19 @@ def highlander(klass):
 
     def cls_init(self, *args, **kwargs):
         "__init__ method by the highlander decorator."
-        if self.__class__.highlander_created:
-            raise ThereCanOnlyBeOne(self.__class__)
-        self.__class__.highlander_created = True
+        # if self.__class__.highlander_created:
+        #     raise ThereCanOnlyBeOne(self.__class__)
+        # self.__class__.highlander_created = True
+        if klass.highlander_created:
+            raise ThereCanOnlyBeOne(klass)
+        klass.highlander_created = True
     def cls_init_call_orig(self, *args, **kwargs):
-        if self.__class__.highlander_created:
-            raise ThereCanOnlyBeOne(self.__class__)
-        self.__class__.highlander_created = True
+        # if self.__class__.highlander_created:
+        #     raise ThereCanOnlyBeOne(self.__class__)
+        # self.__class__.highlander_created = True
+        if klass.highlander_created:
+            raise ThereCanOnlyBeOne(klass)
+        klass.highlander_created = True
         self.__class__.__init_orig__(self, *args, **kwargs)
 
     # override the __init__ method of the class to store the bool
@@ -50,7 +56,8 @@ def highlander(klass):
     # override the __del__ method of the class
     def cls_del(self):
         "__del__ method by the highlander decorator."
-        self.__class__.highlander_created = False
+        # self.__class__.highlander_created = False
+        klass.highlander_created = False
     def cls_del_call_orig(self):
         cls_del(self)
         self.__class__.__del_orig__(self)
@@ -65,3 +72,22 @@ def highlander(klass):
     return klass
 
 
+def highlander_inherit(klass):
+    def cls_init(self, *args, **kwargs):
+        "__init__ method by the highlander decorator."
+        super(klass,self).__init__(*args, **kwargs)
+
+    def cls_init_call_orig(self, *args, **kwargs):
+        super(klass,self).__init__(*args, **kwargs)
+        self.__class__.__init_orig__(self, *args, **kwargs)
+
+    # override the __init__ method of the class to initiate
+    # the Parent (super) class
+    if hasattr(klass, '__init__'):
+        klass.__init_orig__ = klass.__init__
+        klass.__init__ = cls_init_call_orig
+        update_wrapper(cls_init_call_orig, klass.__init_orig__)
+    else:
+        klass.__init__ = cls_init
+
+    return klass

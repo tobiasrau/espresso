@@ -209,6 +209,10 @@ cdef extern from "interaction_data.hpp":
       double distmin
       double distmax
 
+
+
+
+
 #* Union in which to store the parameters of an individual bonded interaction */
   ctypedef union Bond_parameters:
     Fene_bond_parameters fene #
@@ -290,4 +294,45 @@ IF OVERLAPPED == 1:
 
 IF BOND_VIRTUAL == 1:
   cdef extern from "interaction_data.hpp":
-    int virtual_set_params(int bond_type);
+    int virtual_set_params(int bond_type)
+
+IF P3M == 1:
+  cdef extern from "p3m.hpp":
+    int p3m_set_params(double r_cut, int *mesh, int cao, double alpha, double accuracy)
+    void p3m_set_bjerrum()
+    int p3m_adaptive_tune(char **log)
+    void p3m_set_tune_params(double r_cut, int mesh[3], int cao, double alpha, double accuracy, int n_interpol)
+    int p3m_set_mesh_offset(double x, double y, double z)
+    int p3m_set_eps(double eps)
+    int p3m_set_ninterpol(int n)
+
+  # Convert C arguments into numpy arrays
+  cdef inline python_p3m_set_params(double r_cut, np.ndarray[int, ndim=1, mode="c"] mesh, int cao, double alpha, double accuracy, int n_interpol):
+    p3m_set_params(r_cut, &mesh[0], cao, alpha, accuracy)
+
+  cdef inline python_p3m_set_tune_params(double r_cut, np.ndarray[int, ndim=1, mode="c"] mesh, int cao, double alpha, double accuracy, int n_interpol):
+    p3m_set_tune_params(r_cut, &mesh[0], cao, alpha, accuracy, n_interpol)
+      
+  # cdef inline python_p3m_adaptive_tune(np.ndarray[char, ndim=2, mode="c"] log):
+  #   p3m_adaptive_tune(&log[0,0])
+      
+  cdef extern from "p3m-common.hpp":
+    ctypedef struct p3m_parameter_struct:
+      double alpha_L
+      double r_cut_iL
+      int    mesh[3]
+      double mesh_off[3]
+      int    cao
+      int    inter
+      double accuracy
+      double epsilon
+      double cao_cut[3]
+      double a[3]
+      double ai[3]
+      double alpha
+      double r_cut
+      int    inter2
+      int    cao3
+      double additional_mesh[3]
+
+      
