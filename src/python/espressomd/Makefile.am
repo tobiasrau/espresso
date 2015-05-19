@@ -92,7 +92,7 @@ cython_verbose_0 = @echo "  CYTHON   $@";
 
 $(CPPFILES): %.cpp: %.pyx myconfig.pxi
 	$(cython_verbose)cython \
-	  -I $(builddir) -I $(srcdir)/_espresso $< -o $@
+	  -I $(builddir) -I --gdb $(srcdir)/_espresso $< -o $@
 
 CLEANFILES += $(CPPFILES)
 

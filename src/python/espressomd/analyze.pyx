@@ -28,7 +28,8 @@ import particle_data
 #
 # Minimal distance between particles
 #
-def mindist(system, p1 = 'default', p2 = 'default'):
+# def mindist(system, p1 = 'default', p2 = 'default'):
+def mindist(p1 = 'default', p2 = 'default'):
 
   cdef IntList* set1
   cdef IntList* set2

@@ -18,22 +18,24 @@
 #  
 include "myconfig.pxi"
 from highlander import *
+import numpy as np
 # Non-bonded interactions
 
 
 
 @highlander
 class ElectrostaticInteraction(object):
-  _bjerrum_length=0
-  _params={}
 
   def __init__(self, *args, **kwargs):
     """
     Represents an instance of a Electrostatic interaction, such as P3M.
     Required aguments: lb
     """
+    self._bjerrum_length=0
+    self._params={}
     
-    # Interaction id as argument
+    # Bjerrum length and/or tuneing as argument
+    second_arg = ""
     if len(args)<=2:
       if len(args)==1:
         self._bejrrum_length=args[0]
@@ -47,23 +49,36 @@ class ElectrostaticInteraction(object):
         else:
           raise ValueError("Invalid value for Bjerrum length.")
           
+      if coulomb_set_bjerrum(self._bjerrum_length):
+        raise ValueError("Bjerrum_length should be a positive double")
+
       self._params=self.defaultParams()
-      self._partTypes=[-1,-1]
-      
+ 
+
       # Check if all required keys are given
       for k in self.requiredKeys():
         if k not in kwargs:
           raise ValueError("At least the following keys have to be given as keyword arguments: "+self.requiredKeys().__str__())
-      
-      self._params = kwargs
-      
+        self._params[k]=kwargs[k]
+
+
+      for k in kwargs:
+        if k in self.validKeys():
+          self._params[k] = kwargs[k]
+        else:
+          raise KeyError("%s is not a vaild key" %k)
+
+
       # Validation of parameters
       self.validateParams()
-      
+        
       if second_arg == "tune" or second_arg == "tune_alpha":
         self._tune()
+      elif second_arg == "":
+        pass
       else:
         raise ValueError("Invalid argument %s" %second_arg)
+
 
     else:
       raise Exception("At least the Bjerrum length has to be given as argument.")
@@ -85,12 +100,17 @@ class ElectrostaticInteraction(object):
     """Get interaction parameters"""
     # If this instance refers to an actual interaction defined in the es core, load
     # current parameters from there
-    self._params=self._getParamsFromEsCore()
-    
-    return self._params
+    update=self._getParamsFromEsCore()
+    self._params.update(update)    
+    return self._bjerrum_length,self._params
 
   def setParams(self,**p):
     """Update parameters. Only given """
+    # Check for Bjerrum length
+    if "bjerrum_length" in p.keys():
+      self._bjerrum_length = p["bjerrum_length"]
+      p.pop("bjerrum_length",None)
+
     # Check, if any key was passed, which is not known
     for k in p.keys():
       if k not in self.validKeys():
@@ -101,10 +121,18 @@ class ElectrostaticInteraction(object):
       for k in self.requiredKeys():
         if k not in p:
           raise ValueError("At least the following keys have to be given as keyword arguments: "+self.requiredKeys().__str__())
+
     
-    # Put in values given by the user
+    
     self._params.update(p)
+    # vaidate updated parameters
+    self.validateParams()
+    # Put in values given by the user
     self._setParamsInEsCore()
+    if coulomb_set_bjerrum(self._bjerrum_length):
+      raise ValueError("Bjerrum_length should be a positive double")
+   
+
 
   def validateParams(self):
     return True
@@ -113,10 +141,10 @@ class ElectrostaticInteraction(object):
     raise Exception("Subclasses of ElectrostaticInteraction must define the _getParamsFromEsCore() method.")
   
   def _setParamsInEsCore(self):
-    raise Exception("Subclasses of ElectrostaticInteraction must define the setParamsFromEsCore() method.")
+    raise Exception("Subclasses of ElectrostaticInteraction must define the _setParamsFromEsCore() method.")
 
   def _tune(self):
-    raise Exception("Subclasses of ElectrostaticInteraction must define the tune() method or chosen method does not support tuning.")
+    raise Exception("Subclasses of ElectrostaticInteraction must define the _tune() method or chosen method does not support tuning.")
 
   def defaultParams(self):
     raise Exception("Subclasses of ElectrostaticInteraction must define the defaultParams() method.")
@@ -135,8 +163,10 @@ class ElectrostaticInteraction(object):
   def requiredKeys(self): 
     raise Exception("Subclasses of ElectrostaticInteraction must define the requiredKeys() method.")
 
+  def tuneKeys(self):
+    raise Exception("Subclasses of ElectrostaticInteraction must define the tuneKeys() method.")
 
-@highlander_inherit
+
 class P3M(ElectrostaticInteraction):
   def typeNumber(self):
     return 0
@@ -145,90 +175,89 @@ class P3M(ElectrostaticInteraction):
     return "P3M"
 
   def validateParams(self):
-    if self._params["r_cut"]<=0:
+    default_params=self.defaultParams()
+    if not (self._params["r_cut"]>=0 or self._params["r_cut"]==default_params["r_cut"]):
       raise ValueError("P3M r_cut has to be >=0")
-    if not (isinstance(self._params["mesh"],int) or len(self._params["mesh"]) == 3):
+    if not (isinstance(self._params["mesh"],int) or len(self._params["mesh"])):
       raise ValueError("P3M mesh has to be an integer or integer list of length 3")
+    if (isinstance(self._params["mesh"],basestring) and len(self._params["mesh"]) == 3):
+      if (self._params["mesh"][0]%2 != 0 and self._params["mesh"][0] != -1) or (self._params["mesh"][1]%2 != 0 and self._params["mesh"][1] != -1) or (self._params["mesh"][2]%2 != 0 and self._params["mesh"][2] != -1):
+        raise ValueError("P3M requires an even number of mesh points in all directions")
     if not (isinstance(self._params["cao"],int) and self._params["cao"] >= -1 and self._params["cao"] <= 7):
       raise ValueError("P3M cao has to be an integer between -1 and 7")
-
     if not (self._params["accuracy"] > 0):
       raise ValueError("P3M accuracy has to be positive")
-      
-    if not (isinstance(self._params["n_interpol"],int_) and self._params["n_interpol"] >= 0):
-      raise ValueError("P3M n_interpol has to be a positive integer")
-
-    if (mesh[0]%2 != 0 and mesh[0] != -1) or (mesh[1]%2 != 0 and mesh[1] != -1) or (mesh[2]%2 != 0 and mesh[2] != -1):
-      raise ValueError("P3M requires an even number of mesh points in all directions")
+    if self._params["epsilon"] == "metallic":
+      self._params = 0.0
+    if p3m_set_eps(self._params["epsilon"]):
+      raise ValueError("epsilon should be a double or 'metallic'")
+    if self._params["n_interpol"] != default_params["n_interpol"]:
+      if p3m_set_ninterpol(self._params["n_interpol"]):
+        raise ValueError("n_interpol should be a positive integer")
+    if self._params["mesh_off"] != default_params["mesh_off"]:
+      if python_p3m_set_mesh_offset(self._params["mesh_off"]):
+        raise ValueError("mesh_off should be a list of length 3 and values between 0.0 and 1.0")
 
     return True
 
   def validKeys(self):
-    return "alpha_L","r_cut_iL","mesh","mesh_off","cao","inter","accuracy","epsilon","cao_cut","a","ai","alpha","r_cut","inter2","cao3","additional_mesh"
+    return "alpha_L","r_cut_iL","mesh","mesh_off","cao","inter","accuracy","epsilon","cao_cut","a","ai","alpha","r_cut","inter2","cao3","additional_mesh","n_interpol"
 
   def requiredKeys(self): 
-    return "accuracy"
+    return ["accuracy"]
 
-  def setDefaultParams(self):
-    self._params = {"cao":-1,\
-                    "n_interpol":-1,\
-                    "r_cut":-1,\
-                    "accuracy":-1,\
-                    "mesh":[-1,-1,-1]}
+  def defaultParams(self):
+    return {"cao":-1,\
+            "n_interpol":-1,\
+            "r_cut":-1,\
+            "accuracy":-1,\
+            "mesh":[-1,-1,-1],\
+            "epsilon":0.0,\
+            "mesh_off":[-1,-1,-1]}
 
   def _getParamsFromEsCore(self):
-    cdef p3m_parameter_struct* p3m_parameter
-    p3m_parameter = 
-    return \
-      {"alpha_L":p3m_parameter.alpha_L,\
-       "r_cut_iL":p3m_parameter.r_cut_iL,\
-       "mesh":p3m_parameter.mesh,\
-       "mesh_off":p3m_parameter.mesh_off,\
-       "cao":p3m_parameter.cao,\
-       "inter":p3m_parameter.inter,\
-       "accuracy":p3m_parameter.accuracy,\
-       "epsilon":p3m_parameter.epsilon,\
-       "cao_cut":p3m_parameter.cao_cut,\
-       "a":p3m_parameter.a,\
-       "ai":p3m_parameter.ai,\
-       "alpha":p3m_parameter.alpha,\
-       "r_cut":p3m_parameter.r_cut,\
-       "inter2":p3m_parameter.inter2,\
-       "cao3":p3m_parameter.cao3,\
-       "additional_mesh":p3m_parameter.additional_mesh}
+    cdef p3m_data_struct p3m
+    p3m = p3m_get_params()
+    return p3m.params
 
   def _setParamsInEsCore(self):
-    python_p3m_set_params(self._params["r_cut"],np.array(self._params["mesh"]),self._params["cao"],self._params["alpha"],self,_params["accuracy"])
+    python_p3m_set_params(self._params["r_cut"],self._params["mesh"],self._params["cao"],self._params["alpha"],self._params["accuracy"],self._params["n_interpol"])
+    
 
   def _tune(self):
-    cdef char** log
-    python_p3m_set_tune_params(self._params["r_cut"], np.array(self._params["mesh"]), self._params["cao"], -1.0, self._params["accuracy"], self.params["n_interpol"])
-    if not p3m_adaptive_tune(log):
-      raise Exception("\nfailed to tune P3M parameters to required accuracy")
-    # print log
+    python_p3m_set_tune_params(self._params["r_cut"], self._params["mesh"], self._params["cao"], -1.0, self._params["accuracy"], self._params["n_interpol"])
+    resp,log=python_p3m_adaptive_tune()
+    if resp:
+      raise Exception("failed to tune P3M parameters to required accuracy")
+    print log
+    p3m_params = self._getParamsFromEsCore()
+    self._params.update(p3m_params)
 
-@higlander_inherit
-class P3M_GPU(ElectrostaticInteraction):
-  def __init__(self):
-    print "P3M_GPU"
+  def tuneKeys(self):
+    return "r_cut","mesh","cao","alpha","accuracy","n_interpol"
 
+  def isActive(self):
+    return True
 
-@highlander
-class HydrodynamicInteraction(object):
-  def __init__(self):
-    print "Hydrodynamic"
-
-
-@highlander_inherit
-class LB(HydrodynamicInteraction):
-  def __init__(self):
-    print "LB"
+# class P3M_GPU(ElectrostaticInteraction):
+#   def __init__(self):
+#     print "P3M_GPU"
 
 
-@highlander_inherit
-class LB_GPU(HydrodynamicInteraction):
-  def __init__(self):
-    print "LB_GPU"
+# @highlander
+# class HydrodynamicInteraction(object):
+#   def __init__(self):
+#     print "Hydrodynamic"
+
+
+# class LB(HydrodynamicInteraction):
+#   def __init__(self):
+#     print "LB"
+
+
+# class LB_GPU(HydrodynamicInteraction):
+#   def __init__(self):
+#     print "LB_GPU"
 
 
 

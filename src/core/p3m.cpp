@@ -1711,7 +1711,7 @@ int p3m_adaptive_tune(char **log) {
   
   P3M_TRACE(fprintf(stderr,"%d: finished tuning, best time: %lf\n", this_node,time_best));
   if(time_best == 1e20) {
-    *log = strcat_alloc(*log, "failed to tune P3M parameters to required accuracy\n");
+   *log = strcat_alloc(*log, "failed to tune P3M parameters to required accuracy\n");
     return ES_ERROR;
   }
 

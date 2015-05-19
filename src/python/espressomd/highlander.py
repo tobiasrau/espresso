@@ -72,22 +72,22 @@ def highlander(klass):
     return klass
 
 
-def highlander_inherit(klass):
-    def cls_init(self, *args, **kwargs):
-        "__init__ method by the highlander decorator."
-        super(klass,self).__init__(*args, **kwargs)
+# def highlander_inherit(klass):
+#     def cls_init(self, *args, **kwargs):
+#         "__init__ method by the highlander decorator."
+#         super(klass,self).__init__(*args, **kwargs)
 
-    def cls_init_call_orig(self, *args, **kwargs):
-        super(klass,self).__init__(*args, **kwargs)
-        self.__class__.__init_orig__(self, *args, **kwargs)
+#     def cls_init_call_orig(self, *args, **kwargs):
+#         super(klass,self).__init__(*args, **kwargs)
+#         self.__class__.__init_orig__(self, *args, **kwargs)
 
-    # override the __init__ method of the class to initiate
-    # the Parent (super) class
-    if hasattr(klass, '__init__'):
-        klass.__init_orig__ = klass.__init__
-        klass.__init__ = cls_init_call_orig
-        update_wrapper(cls_init_call_orig, klass.__init_orig__)
-    else:
-        klass.__init__ = cls_init
+#     # override the __init__ method of the class to initiate
+#     # the Parent (super) class
+#     if hasattr(klass, '__init__'):
+#         klass.__init_orig__ = klass.__init__
+#         klass.__init__ = cls_init_call_orig
+#         update_wrapper(cls_init_call_orig, klass.__init_orig__)
+#     else:
+#         klass.__init__ = cls_init
 
-    return klass
+#     return klass

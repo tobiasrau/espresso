@@ -66,7 +66,7 @@ min_dist     = 0.9
 
 # integration
 int_steps   = 1000
-int_n_times = 5
+int_n_times = 100
 
 
 #############################################################
