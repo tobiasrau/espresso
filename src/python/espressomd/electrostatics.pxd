@@ -23,10 +23,15 @@ from _system cimport *
 cimport numpy as np
 from utils cimport *
 
-
 IF ELECTROSTATICS == 1:
   cdef extern from "interaction_data.hpp":
     int coulomb_set_bjerrum(double bjerrum)
+
+    ctypedef struct Coulomb_parameters:
+      double bjerrum
+      double prefactor
+
+    cdef extern Coulomb_parameters coulomb
 
   IF P3M == 1:
     cdef extern from "p3m-common.hpp":
@@ -48,31 +53,6 @@ IF ELECTROSTATICS == 1:
         int    cao3
         double additional_mesh[3]
 
-      ctypedef struct p3m_send_mesh:
-        int s_dim[6][3]
-        int s_ld[6][3]
-        int s_ur[6][3]
-        int s_size[6]
-        int r_dim[6][3]
-        int r_ld[6][3]
-        int r_ur[6][3]
-        int r_size[6]
-        int max
-
-      ctypedef struct p3m_local_mesh:
-        int dim[3]
-        int size
-        int ld_ind[3]
-        double ld_pos[3]
-        int inner[3]
-        int in_ld[3]
-        int in_ur[3]
-        int margin[6]
-        int r_margin[6]
-        int q_2_off
-        int q_21_off
-
-
     cdef extern from "p3m.hpp":
       int p3m_set_params(double r_cut, int *mesh, int cao, double alpha, double accuracy)
       void p3m_set_tune_params(double r_cut, int mesh[3], int cao, double alpha, double accuracy, int n_interpol)
@@ -85,8 +65,8 @@ IF ELECTROSTATICS == 1:
       ctypedef struct p3m_data_struct:
         p3m_parameter_struct params
       
-
-      p3m_data_struct p3m_get_params()
+      # links intern C-struct with python object
+      cdef extern p3m_data_struct p3m
 
     # Convert C arguments into numpy array
     cdef inline python_p3m_set_mesh_offset(mesh_off):
@@ -104,18 +84,16 @@ IF ELECTROSTATICS == 1:
       return response, log
 
 
-    cdef inline python_p3m_set_params(p_r_cut, p_mesh, p_cao, p_alpha, p_accuracy, p_n_interpol):
+    cdef inline python_p3m_set_params(p_r_cut, p_mesh, p_cao, p_alpha, p_accuracy):
       cdef int mesh[3]
       cdef double r_cut
       cdef int cao
       cdef double alpha
       cdef double accuracy
-      cdef int n_interpol
       r_cut = p_r_cut
       cao = p_cao
       alpha = p_alpha
       accuracy = p_accuracy
-      n_interpol = p_n_interpol
       if isinstance(p_mesh,int):
         mesh[0]=p_mesh
         mesh[1]=p_mesh

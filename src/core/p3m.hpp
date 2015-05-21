@@ -120,11 +120,6 @@ extern p3m_data_struct p3m;
 /** \name Exported Functions */
 /************************************************************/
 /*@{*/
-
-inline p3m_data_struct p3m_get_params() {
-  return p3m;
-}
-
 void p3m_pre_init(void);
 
 void p3m_set_bjerrum(void);
