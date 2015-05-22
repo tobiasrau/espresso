@@ -67,7 +67,7 @@ min_dist     = 0.9
 
 # integration
 int_steps   = 1000
-int_n_times = 100
+int_n_times = 10
 
 
 #############################################################
@@ -101,8 +101,9 @@ for i in range(n_part/2-1):
   system.part[2*i].q = -1.0
   system.part[2*i+1].q = 1.0
 
-p3m=electrostatics.P3M(bjerrum_length=1.0,mesh=[24,24,24],accuracy=1e-2)
-p3m.activate()
+p3m=electrostatics.P3M(bjerrum_length=1.0,mesh=24,accuracy=1e-2)
+system.Actors.add(p3m)
+print(system.Actors)
 
 analyze.distto(system, 0)
 

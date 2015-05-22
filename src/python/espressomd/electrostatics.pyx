@@ -18,12 +18,12 @@
 #  
 include "myconfig.pxi"
 import numpy as np
-from actors import Actors
+from actors import Actor
 # Non-bonded interactions
 
 
 
-class ElectrostaticInteraction(Actors):
+class ElectrostaticInteraction(Actor):
   def _tune(self):
     raise Exception("Subclasses of ElectrostaticInteraction must define the _tune() method or chosen method does not support tuning.")
   

@@ -4,10 +4,10 @@ from highlander import ThereCanOnlyBeOne
 
 
 
-class Actors(object):
+cdef class Actor(object):
     activeList = dict(ElectrostaticInteraction = False,\
-                         MagnetostaticInteraction = False,\
-                         HydrodynamicInteraction = False)
+                      MagnetostaticInteraction = False,\
+                      HydrodynamicInteraction = False)
 
     def __init__(self, *args, **kwargs):
         self._isactive = False
@@ -26,14 +26,18 @@ class Actors(object):
             else:
                 raise KeyError("%s is not a vaild key" %k)
 
-    def activate(self):
+    def _activate(self):
         inter=self._getInteractionType()
-        if Actors.activeList[inter]:
+        if Actor.activeList[inter]:
             raise ThereCanOnlyBeOne(self.__class__.__bases__[0])
-        Actors.activeList[inter] = True
+        Actor.activeList[inter] = True
         self.validateParams()
         self._activateMethod()
         self._isactive = True
+
+    def _deactivate(self):
+        self._deactivateMethod()
+        self._isactive = False
 
     def isValid(self):
         """Check, if the data stored in the instance still matches what is in Espresso"""
@@ -100,4 +104,29 @@ class Actors(object):
         raise Exception("Subclasses of %s must define the defaultParams() method." %self._getInteractionType())
 
     def _activateMethod(self):
-        raise Exception("Subclasses of %s must define the defaultParams() method." %self._getInteractionType())
+        raise Exception("Subclasses of %s must define the _activateMethod() method." %self._getInteractionType())
+
+    def _deactivateMethod(self):
+        raise Exception("Subclasses of %s must define the _deactivateMethod() method." %self._getInteractionType())
+
+
+class Actors:
+    activeActors = []
+
+    def add(self,actor):
+        Actors.activeActors.append(actor)
+        actor._activate()
+
+    def __str__(self):
+        print "Active Actors:"
+        for actor in Actors.activeActors:
+            print actor
+        return ""
+
+    def get(self):
+        # for actor in Actors.activeActors:
+        #     print actor.__class__.__name__
+        return "%s" %Actors.activeActors
+
+    def deactivate(self,actor):
+        actor._deactivate()

@@ -18,10 +18,12 @@
 #  
 # Tests particle property setters/getters
 import unittest as ut
-import espresso.System as es
+import espressomd
+import espressomd._system as es
 import numpy as np
-from espresso.interactions import LennardJonesInteraction
+from espressomd.interactions import LennardJonesInteraction
 
+system = espressomd.System()
 
 class NonBondedInteractionsTests(ut.TestCase):
 #  def __init__(self,particleId):
@@ -48,9 +50,6 @@ class NonBondedInteractionsTests(ut.TestCase):
     return True
 
 
-
-
-
   def generateTestForNonBondedInteraction(_partType1,_partType2,_interClass,_params,_interName):
     """Generates test cases for checking interaction parameters set and gotten back
     from Es actually match. Only keys which are present  in _params are checked
@@ -72,10 +71,10 @@ class NonBondedInteractionsTests(ut.TestCase):
       # which was there, when the outer function was called
       
       # Set parameters
-      getattr(es.nonBondedInter[partType1,partType2],interName).setParams(**params)
+      getattr(system.nonBondedInter[partType1,partType2],interName).setParams(**params)
       
       # Read them out again
-      outInter=getattr(es.nonBondedInter[partType1,partType2],interName)
+      outInter=getattr(system.nonBondedInter[partType1,partType2],interName)
       outParams=outInter.getParams()
       
       
@@ -98,8 +97,8 @@ class NonBondedInteractionsTests(ut.TestCase):
     
 
   def test_forcecap(self):
-    es.nonBondedInter.setForceCap(17.5)
-    self.assertEqual(es.nonBondedInter.getForceCap(),17.5)
+    system.nonBondedInter.setForceCap(17.5)
+    self.assertEqual(system.nonBondedInter.getForceCap(),17.5)
 
 
 if __name__ == "__main__":
