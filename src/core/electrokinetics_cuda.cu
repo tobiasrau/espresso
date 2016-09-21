@@ -20,6 +20,9 @@
 #ifdef CUDA /* Terminates at end of file */
 #ifdef ELECTROKINETICS /* Terminates at end of file */
 
+
+#include <boost/serialization/serialization.hpp>
+/* #include <boost/mpi/communicator.hpp> */
 #include <cuda.h>
 #include <cufft.h>
 #include <iostream>
