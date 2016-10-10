@@ -158,17 +158,17 @@ IF LB_GPU or LB:
 
         # input/output function wrappers for whole LB fields
         ####################################################
-        def print_vtk_velocity(self, path):
+        def print_vtk_velocity(self, path=None):
             lb_lbfluid_print_vtk_velocity(utils.to_char_pointer(path))
-        def print_vtk_boundary(self, path):
+        def print_vtk_boundary(self, path=None):
             lb_lbfluid_print_vtk_boundary(utils.to_char_pointer(path))
-        def print_velocity(self, path):
+        def print_velocity(self, path=None):
             lb_lbfluid_print_velocity(utils.to_char_pointer(path))
-        def print_boundary(self, path):
+        def print_boundary(self, path=None):
             lb_lbfluid_print_boundary(utils.to_char_pointer(path))
-        def save_checkpoint(self, path, binary):
+        def save_checkpoint(self, path=None, binary=False):
             lb_lbfluid_save_checkpoint(utils.to_char_pointer(path), binary)
-        def load_checkpoint(self, path, binary):
+        def load_checkpoint(self, path=None, binary=False):
             lb_lbfluid_load_checkpoint(utils.to_char_pointer(path), binary)
        
         # input/output function wrappers for LB nodes

@@ -23,6 +23,37 @@
 \section{\texttt{integrate}: Running the simulation}
 \newescommand{integrate}
 
+\begin{pysyntax}
+  \object{
+    espressomd.System.integrator
+  }{
+    run
+  }{
+    steps = \arg{int},
+  }[
+    recalc_forces = \arg{bool},
+    reuse_forces = \arg{bool}
+  ]
+  \object{
+    espressomd.System.integrator
+  }{
+    set_isotropic_npt
+  }{
+    ext_pressure = \arg{float},
+    pistion = \arg{float}
+  }[
+    xdir = \arg{float},
+    ydir = \arg{float},
+    zdir = \arg{float},
+    cubic_box = \arg{bool}
+    ]
+  \object{
+    espressomd.System.integrator
+  }{
+    set_nvt
+  }{}[]
+\end{pysyntax}
+
 \begin{essyntax}
   \variant{1} integrate \var{steps} \opt{recalc_forces} \opt{reuse_forces}
   \variant{2} integrate set \opt{nvt}
@@ -95,48 +126,25 @@ returns the wall runtime in seconds.
 \section{\texttt{minimize_energy}: Run steepest descent minimization}
 \newescommand[minimize-energy]{minimize_energy}
 
+\begin{pysyntax}
+  \object{
+    espressomd.System.integrator
+  }{
+    set_steepest_descent
+  }{
+    f_max = \arg{float},
+    gamma = \arg{float},
+    max_displacement = \arg{float}
+  }
+\end{pysyntax}
+
+
 \begin{essyntax}
   \variant{1} minimize_energy \var{f_\mathrm{max}} \var{steps} \var{gamma} \var{maxdisplacement}
 \end{essyntax}
 
-\begin{pysyntax}
-  \object{
-    espressomd.minimize_energy
-  }{
-    init
-  }{
-    f_max = \arg{double},
-    gamma = \arg{double},
-    max_steps = \arg{double},
-    max_displacement = \arg{double}
-  }
-  \object{
-    espressomd.minimize_energy
-  }{
-    minimize
-  }{}
-  \object{
-    System.minimize_energy
-  }{
-    init
-  }{
-    f_max = \arg{double},
-    gamma = \arg{double},
-    max_steps = \arg{double},
-    max_displacement = \arg{double}
-  }
-  \object{
-    System.minimize_energy
-  }{
-    minimize
-  }{}
-\end{pysyntax}
 
-In Python the minimize\_energy functionality can be imported from \texttt{espressomd}
-as class \texttt{MinimizeEnergy}. Alternatively it is already part of the System
-class object and can be called from there (second variant). 
-
-This command runs a steepest descent energy minimization on the system.
+The \texttt{set\_steepest\_descent} command tells the integrator to perform steps with the steepest descent algorithm rather than with the velocity verlet algorithm. Performing \texttt{integrator.run(steps=n\_steps)} runs the steepes descent algorithm.
 Please note that the behaviour is undefined if either a thermostat, Maggs electrostatics or Lattice-Boltzmann is activated.
 It runs a simple steepest descent algorithm:
 

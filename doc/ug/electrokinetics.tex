@@ -129,6 +129,37 @@ The electrokinetic equations have the following properties:
 
 \subsection{\label{ssec:ek-init}Initialization}
 
+\begin{pysyntax}
+	\object{
+          espressomd.electrokinetics
+          }{
+            Electrokinetics
+          }{
+            agrid = \arg{float},
+            lb_density = \arg{float},
+            viscosity = \arg{float},
+            friction = \arg{float},
+            T = \arg{float},
+            bjerrum_length = \arg{float}
+          }[
+            bulk_viscosity = \arg{float},
+            gamma_odd = \arg{float},
+            gamma_even = \arg{float},
+            stencil = \arg{string},
+            advection = \arg{bool},
+            fluid_coupling = \arg{string}
+          ]
+% \end{pysyntax}
+% \begin{pysyntax}
+	\attributes{
+          espressomd.System()
+          }{
+            actors
+          }{
+            add.(\arg{electrokinetics.EKBoundary})
+          }
+\end{pysyntax}
+
 \begin{essyntax}
   \require{1 or 2 or 3}{electrokinetics}
   \opt{agrid  \var{agrid}}
@@ -201,6 +232,30 @@ interactions a particles Coulomb method like Ewald or P3M has to be activate too
 
 \subsection{\label{ssec:ek-diff-species}Diffusive Species}
 
+\begin{pysyntax}
+	\object{
+          espressomd.electrokinetics
+          }{
+            Species
+          }{
+            density = \arg{float},
+            D = \arg{float},
+            valency = \arg{float}
+          }[
+            ext_force = \arg{array of 3 floats}
+          ]
+% \end{pysyntax}
+% \begin{pysyntax}
+	\attributes{
+          espressomd.electrokinetics
+          }{
+            Elektrokinetics()
+          }{
+            add_species(\arg{electrokinetics.Species})
+          }
+\end{pysyntax}
+
+
 \begin{essyntax}
   \require{1 or 2 or 3}{electrokinetics}
   \var{species\_number}
@@ -214,6 +269,7 @@ interactions a particles Coulomb method like Ewald or P3M has to be activate too
   \required[3]{EK_REACTIONS}
   \end{features}
 \end{essyntax}
+
 The \lit{electrokinetics} command followed by an integer \var{species\_number}
 (in the range 0 to 10) and several options can be used to initialize the 
 diffusive species. Here the options specify: the number density
@@ -230,6 +286,28 @@ set to properly initialize the diffusive species; the \var{ext\_force} is
 optional.
 
 \subsection{\label{ssec:ek-boundaries}Boundaries}
+
+\begin{pysyntax}
+  \object{
+    espressomd.electrokinetics
+  }{
+    EKBoundary
+  }{
+    shape = \arg{shapes.Shape},
+  }[
+    charge_density= \arg{float},
+    net_charge = \arg{float}
+  ]
+\end{pysyntax}
+\begin{pysyntax}
+  \attributes{
+    espressomd.System()
+  }{
+    ekboundaries
+  }{
+    add(\arg{electrokinetics.EKBoundary})
+  }
+\end{pysyntax}
 
 \begin{essyntax}
   \require{1 or 2 or 3}{electrokinetics}
@@ -260,6 +338,57 @@ order to properly set up the boundaries, the \var{charge\_density} and relevant
 
 \subsection{\label{ssec:ek-output-fields}Fields}
 
+\begin{pysyntax}
+	\object{
+          espressomd.electrokinetics.Electrokinetics()
+          }{
+            print_vtk_velocity
+          }{
+            path = \arg{file}
+          }[]
+
+	\object{
+          espressomd.electrokinetics.Electrokinetics()
+          }{
+            print_vtk_boundary
+          }{
+            path = \arg{file}
+          }[]
+
+	\object{
+          espressomd.electrokinetics.Electrokinetics()
+          }{
+            print_vtk_density
+          }{
+            path = \arg{file}
+          }[]
+
+	\object{
+          espressomd.electrokinetics.Electrokinetics()
+          }{
+            print_vtk_potential
+          }{
+            path = \arg{file}
+          }[]
+
+	\object{
+          espressomd.electrokinetics.Electrokinetics()
+          }{
+            print_vtk_lbforce
+          }{
+            path = \arg{file}
+          }[]
+
+	\object{
+          espressomd.electrokinetics.Electrokinetics()
+          }{
+            print_vtk_particle_potential
+          }{
+            path = \arg{file}
+          }[]
+\end{pysyntax}
+
+
 \begin{essyntax}
   \require{1 or 2 or 3}{electrokinetics}
   print 
@@ -285,6 +414,24 @@ by visualization software such as paraview\footnote{http://www.paraview.org/}
 and mayavi2\footnote{http://code.enthought.com/projects/mayavi/}. If the 
 \opt{vtk} option is not specified, a gnuplot readable data file will be exported.
 
+\begin{pysyntax}
+	\object{
+          espressomd.electrokinetics.Species()
+          }{
+            print_vtk_velocity
+          }{
+            path = \arg{file}
+          }[]
+
+	\object{
+          espressomd.electrokinetics.Species()
+          }{
+            print_vtk_density
+          }{
+            path = \arg{file}
+          }[]
+\end{pysyntax}
+
 \begin{essyntax}
   \require{1 or 2 or 3}{electrokinetics}
   \var{species\_number} 
@@ -304,6 +451,17 @@ specify the number density and flux of species \var{species\_number},
 respectively.
 
 \subsection{\label{ssec:ek-local-quantities}Local Quantities}
+
+\begin{pysyntax}
+	\attributes{
+          espressomd.electrokinetics
+          }{
+            Species[node]
+          }{
+            density = \arg{float},
+            flux = \arg{float}
+          }
+\end{pysyntax}
 
 \begin{essyntax}
   \require{1 or 2 or 3}{electrokinetics}

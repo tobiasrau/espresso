@@ -60,6 +60,15 @@ description of the method, please refer to the literature.
         gamma_odd = \arg{float},
         gamma_even = \arg{float}
     ]
+% \end{pysyntax}
+% \begin{pysyntax}
+	\attributes{
+          espressomd.System()
+          }{
+            actors
+          }{
+            add.(\arg{lb.LBFluid | LBFluid_GPU})
+          }
     \begin{features}
         \required[1]{LB}
         \required[2]{LB_GPU}
@@ -179,6 +188,17 @@ use ``integrate \textit{steps} reuse_forces'' upon the first call to integrate.
 This causes the old forces to be reused and thus conserves momentum.
 
 \section{LB as a thermostat}
+\begin{pysyntax}
+	\object{
+          espressomd.System().thermostat
+          }{
+            set_lb
+          }{
+            kT = \arg{float}
+          }[]
+\end{pysyntax}
+
+
 \begin{essyntax}
   thermostat \require{1 or 2 or 3}{lb} \var{T}
   \begin{features}
@@ -341,6 +361,24 @@ potential minimum) from the full interaction to the WCA one. For more
 information see \ref{sec:LennardJones} and \ref{sec:affinity}.
 
 \section{Reading and setting single lattice nodes}
+
+\begin{pysyntax}
+	\attributes{
+          espressomd.lb
+          }{
+            LBFluid | LBFluid_GPU[node]
+          }{
+            velocity,
+            density,
+            pi,
+            pi_neq,
+            population,
+            boundary
+          }
+
+\end{pysyntax}
+
+
 \begin{essyntax}
   lbnode \var{x} \var{y} \var{z} \alt{print \asep set} \var{args}
   \begin{features}
@@ -395,6 +433,61 @@ remove_momentum}, that removes the total momentum of the fluid.
 
 \section{Visualization}
 \label{ssec:LBvisualization}
+
+\begin{pysyntax}
+	\object{
+          espressomd.lb.LBFluid | LBFluid_GPU()
+          }{
+            print_vtk_velocity
+          }{
+            path = \arg{file}
+          }[]
+
+	\object{
+          espressomd.lb.LBFluid | LBFluid_GPU()
+          }{
+            print_vtk_boundary
+          }{
+            path = \arg{file}
+          }[]
+
+	\object{
+          espressomd.lb.LBFluid | LBFluid_GPU()
+          }{
+            print_velocity
+          }{
+            path = \arg{file}
+          }[]
+
+	\object{
+          espressomd.lb.LBFluid | LBFluid_GPU()
+          }{
+            print_velocity
+          }{
+            path = \arg{file}
+          }[]
+
+	\object{
+          espressomd.lb.LBFluid | LBFluid_GPU()
+          }{
+            save_checkpoint
+          }{
+            path = \arg{file}
+          }[
+            binary = \arg{bool}
+          ]
+
+	\object{
+          espressomd.lb.LBFluid | LBFluid_GPU()
+          }{
+            load_checkpoint
+          }{
+            path = \arg{file}
+          }[
+            binary = \arg{bool}
+            ]
+\end{pysyntax}
+
 \begin{essyntax}
   \variant{1} lbfluid print \opt{vtk} \var{property} \var{filename}
   \variant{2} lbfluid print vtk velocity \opt{bb1_x bb1_y bb1_z bb2_x bb2_y bb2_z} \var{filename}
@@ -420,6 +513,29 @@ $y$-direction).  If the \lit{SHANCHEN} bicomponent fluid is used, two filenames
 have to be supplied when exporting the density field, to save both components.
 
 \section{Setting up boundary conditions}
+
+\begin{pysyntax}
+	\object{
+          espressomd.lbboundaries
+          }{
+            LBBoundary
+          }{
+            shape = \arg{shapes.Shape}
+          }[
+            velocity = \arg{array of 3 floats},
+            force = \arg{array of 3 floats}
+          ]
+% \end{pysyntax}
+% \begin{pysyntax}
+	\attributes{
+          espressomd.System()
+          }{
+            lbboundaries
+          }{
+            add.(\arg{lbboundaries.LBBoundary})
+          }
+\end{pysyntax}
+
 \begin{essyntax}
   \variant{1} lbboundary \var{shape} \var{shape\_args} \opt{velocity
     \var{vx} \var{vy} \var{vz}}

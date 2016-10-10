@@ -134,22 +134,22 @@ IF ELECTROKINETICS:
             self._params.update(self._get_params_from_es_core())
             return self._params
 
-        def print_vtk_boundary(self, path):
+        def print_vtk_boundary(self, path=None):
             lb_lbfluid_print_vtk_boundary(utils.to_char_pointer(path))
             
-        def print_vtk_velocity(self, path):
+        def print_vtk_velocity(self, path=None):
             ek_lb_print_vtk_velocity(utils.to_char_pointer(path))
 
-        def print_vtk_density(self, path):
+        def print_vtk_density(self, path=None):
             ek_lb_print_vtk_velocity(utils.to_char_pointer(path))
 
-        def print_vtk_potential(self, path):
+        def print_vtk_potential(self, path=None):
             ek_print_vtk_potential(utils.to_char_pointer(path))
 
-        def print_vtk_lbforce(self, path):
+        def print_vtk_lbforce(self, path=None):
             ek_print_vtk_lbforce(utils.to_char_pointer(path))
 
-        def print_vtk_particle_potential(self, path):
+        def print_vtk_particle_potential(self, path=None):
             IF EK_ELECTROSTATIC_COUPLING:
                 ek_print_vtk_particle_potential(utils.to_char_pointer(path))
             ELSE:
@@ -257,10 +257,10 @@ IF ELECTROKINETICS:
             self._params.update(self._get_params_from_es_core())
             return self._params
                 
-        def print_vtk_density(self, path):
+        def print_vtk_density(self, path=None):
             ek_print_vtk_density(self.id, utils.to_char_pointer(path))
             
-        def print_vtk_flux(self, path):
+        def print_vtk_flux(self, path=None):
             ek_print_vtk_flux(self.id, utils.to_char_pointer(path))
     
     
