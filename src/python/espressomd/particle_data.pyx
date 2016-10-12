@@ -1205,6 +1205,9 @@ cdef class ParticleList:
         if isinstance(key, slice):
             return ParticleSlice(key)
 
+        if isinstance(key, int) and (key < 0):
+            key = max_seen_particle - (abs(key) - 1)
+
         if not np.all(self.exists(key)):
             if isinstance(key, int):
                 non_existing = key
@@ -1215,6 +1218,7 @@ cdef class ParticleList:
 
         if isinstance(key, tuple) or isinstance(key, list) or isinstance(key, np.ndarray):
             return ParticleSlice(np.array(key))
+
 
         return ParticleHandle(key)
 
